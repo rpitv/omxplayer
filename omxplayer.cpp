@@ -51,6 +51,7 @@ extern "C" {
 #include "OMXReader.h"
 #include "OMXPlayerVideo.h"
 #include "OMXPlayerAudio.h"
+#include "OMXAudioLimiterFilter.h"
 #include "OMXPlayerSubtitles.h"
 #include "OMXControl.h"
 #include "DllOMX.h"
@@ -107,6 +108,7 @@ int               m_subtitle_index      = -1;
 DllBcmHost        m_BcmHost;
 OMXPlayerVideo    m_player_video;
 OMXPlayerAudio    m_player_audio;
+OMXAudioFilter    *m_audio_filter       = NULL;
 OMXPlayerSubtitles  m_player_subtitles;
 int               m_tv_show_info        = 0;
 bool              m_has_video           = false;
@@ -515,6 +517,7 @@ int main(int argc, char *argv[])
   FORMAT_3D_T           m_3d                  = CONF_FLAGS_FORMAT_NONE;
   bool                  m_refresh             = false;
   double                startpts              = 0;
+  int                   m_compress_target     = 0;
   uint32_t              m_blank_background    = 0;
   bool sentStarted = false;
   float m_threshold      = -1.0f; // amount of audio/video required to come out of buffering
@@ -595,6 +598,7 @@ int main(int argc, char *argv[])
     { "refresh",      no_argument,        NULL,          'r' },
     { "genlog",       no_argument,        NULL,          'g' },
     { "sid",          required_argument,  NULL,          't' },
+    { "compress",     required_argument,  NULL,          'c' },
     { "pos",          required_argument,  NULL,          'l' },    
     { "blank",        optional_argument,  NULL,          'b' },
     { "font",         required_argument,  NULL,          font_opt },
@@ -646,10 +650,16 @@ int main(int argc, char *argv[])
   //Build default keymap just in case the --key-config option isn't used
   map<int,int> keymap = KeyConfig::buildDefaultKeymap();
 
-  while ((c = getopt_long(argc, argv, "wiIhvkn:l:o:cslb::pd3:Myzt:rg", longopts, NULL)) != -1)
+  while ((c = getopt_long(argc, argv, "wiIhvkn:l:o:c:slb::pd3:Myzt:rg", longopts, NULL)) != -1)
   {
     switch (c) 
     {
+      case 'c':
+        m_compress_target = atoi(optarg);
+        if (m_compress_target < 0) {
+          m_compress_target = 0;
+        }
+        break;
       case 'r':
         m_refresh = true;
         break;
@@ -1157,6 +1167,10 @@ int main(int argc, char *argv[])
   if (m_config_audio.hints.codec == AV_CODEC_ID_DTS &&
       m_BcmHost.vc_tv_hdmi_audio_supported(EDID_AudioFormat_eDTS, 2, EDID_AudioSampleRate_e44KHz, EDID_AudioSampleSize_16bit ) != 0)
     m_config_audio.passthrough = false;
+
+  if (m_compress_target != 0) {
+    m_config_audio.filter = new OMXAudioLimiterFilter(m_compress_target);
+  }
 
   if(m_has_audio && !m_player_audio.Open(m_av_clock, m_config_audio, &m_omx_reader))
     goto do_exit;

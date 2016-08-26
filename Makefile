@@ -37,6 +37,8 @@ SRC=		linux/XMemUtils.cpp \
 		OMXControl.cpp \
 		Keyboard.cpp \
 		omxplayer.cpp \
+		OMXAudioFilter.cpp \
+		OMXAudioLimiterFilter.cpp \
 
 OBJS+=$(filter %.o,$(SRC:.cpp=.o))
 

@@ -34,6 +34,7 @@
 #include "OMXCore.h"
 #include "OMXClock.h"
 #include "OMXStreamInfo.h"
+#include "OMXAudioFilter.h"
 #include "BitstreamConverter.h"
 #include "utils/PCMRemap.h"
 #include "utils/SingleLock.h"
@@ -54,6 +55,7 @@ public:
   bool is_live;
   float queue_size;
   float fifo_size;
+  OMXAudioFilter *filter;
 
   OMXAudioConfig()
   {
@@ -65,6 +67,7 @@ public:
     is_live = false;
     queue_size = 3.0f;
     fifo_size = 2.0f;
+    filter = NULL;
   }
 };
 

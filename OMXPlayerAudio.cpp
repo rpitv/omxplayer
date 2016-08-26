@@ -253,6 +253,11 @@ bool OMXPlayerAudio::Decode(OMXPacket *pkt)
 
       int ret = 0;
 
+      if (m_config.filter != NULL)
+      {
+        m_pAudioFilter->FilterSamples(decoded, decoded_size);
+      }     
+
       ret = m_decoder->AddPackets(decoded, decoded_size, dts, pts, m_pAudioCodec->GetFrameSize());
       if(ret != decoded_size)
       {
